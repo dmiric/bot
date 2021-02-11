@@ -479,7 +479,7 @@ export class TradeService {
 
                             // fix problem of orders being filled socket is disconnected
                             const lastBuyOrder = this.orderCycleService.getLastBuyOrder(key)
-                            if (lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
+                            if (lastBuyOrder && lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
                                 let lastBuyOrderStillActive = false
                                 if (order[8] == 'LIMIT' && order[3] == key.symbol && order[31] !== null &&
                                     order[31].hasOwnProperty('key') && order[31]['meta']['id'] === lastBuyOrder.meta.id) {
