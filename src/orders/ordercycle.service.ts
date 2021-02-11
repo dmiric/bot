@@ -18,12 +18,11 @@ export class OrderCycleService {
     ) { }
 
     init(key: Key): void {
-        if (!this.customBuyOrders.hasOwnProperty(key.id)) {
-            this.customBuyOrders[key.id] = []
+        if (!this.customBuyOrders || !this.customBuyOrders.hasOwnProperty(key.id)) {
+            this.customBuyOrders[key.id] = [];
         }
-
-        if (!this.buyOrders.hasOwnProperty(key.id)) {
-            this.buyOrders[key.id] = []
+        if (!this.buyOrders || !this.buyOrders.hasOwnProperty(key.id)) {
+            this.buyOrders[key.id] = [];
         }
 
         this.setCurrentTimeFrame(key)
