@@ -14,7 +14,6 @@ import { Order } from '../interfaces/order.model'
 import { normalClosureMessage } from 'rxjs-websockets';
 import { OrderSocketService } from '../orders/ordersocket.service'
 import { RestService } from './rest.service';
-import { last } from 'rxjs/operators'
 
 @Injectable()
 export class TradeService {
@@ -229,6 +228,20 @@ export class TradeService {
                     // and we send a message to start the stream
                     this.orderSocketService.auth()
                 } else {
+                    if (data) {
+                        // hack to reconnect if position update is late 1 minute
+                        if (this.lastPositionUpdateTime > 0) {
+                            const secDelay = Math.floor((Date.now() - this.lastPositionUpdateTime) / 1000)
+                            if (secDelay > 60) { //&& this.lastBuyOrderId > 0) {
+                                this.orderSocketService.setReadyState(false)
+                                // unsub from order stream
+                                this.orderSubscription.unsubscribe()
+                                this.logger.log(data, "reconnecting to order socket")
+                                this.trade(key, true)
+                            }
+                        }
+                    }
+
                     if (data.event) {
                         return;
                     }
@@ -236,16 +249,6 @@ export class TradeService {
                     // hb: hearth beat
                     if (data[1] == 'hb') {
                         this.orderSocketService.requestReqcalc()
-
-                        // hack to reconnect if position update is late 1 minute
-                        const secDelay = Math.floor((Date.now() - this.lastPositionUpdateTime) / 1000)
-                        if (secDelay > 60) { //&& this.lastBuyOrderId > 0) {
-                            this.orderSocketService.setReadyState(false)
-                            // unsub from order stream
-                            this.orderSubscription.unsubscribe()
-                            this.logger.log(data, "reconnecting to order socket")
-                            this.trade(key, true)
-                        }
                     }
 
                     // ws: wallet snapshot
@@ -261,6 +264,7 @@ export class TradeService {
                     if (data[1] == 'wu') {
                         // make orders that are not executed
                         const order = this.orderCycleService.getLastBuyOrder(key)
+                        this.orderSocketService.requestReqcalc()
 
                         if (!order) {
                             return
@@ -471,6 +475,21 @@ export class TradeService {
                                 order[31].hasOwnProperty('key') && order[31]['key']['id'] === key.id && order[31]['type'] == 'custom') {
                                 this.orderCycleService.addCustomBuyOrder(key, order)
                                 this.orderCycleService.updateBuyOrder(key, order[2], { sentToEx: true });
+                            }
+
+                            // fix problem of orders being filled socket is disconnected
+                            const lastBuyOrder = this.orderCycleService.getLastBuyOrder(key)
+                            if (lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
+                                let lastBuyOrderStillActive = false
+                                if (order[8] == 'LIMIT' && order[3] == key.symbol && order[31] !== null &&
+                                    order[31].hasOwnProperty('key') && order[31]['meta']['id'] === lastBuyOrder.meta.id) {
+                                    lastBuyOrderStillActive = true
+                                }
+
+                                if(lastBuyOrderStillActive === false) {
+                                    // for now we will only mark order as filled
+                                    this.orderCycleService.updateBuyOrder(key, lastBuyOrder.cid, { tradeExecuted: true, tradeTimeStamp: Date.now() });
+                                }
                             }
                         }
                     }
