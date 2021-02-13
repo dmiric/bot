@@ -242,7 +242,7 @@ export class TradeService {
                             }
 
                             const candleDelay = Math.floor((Date.now() - this.currentCandleMts) / 1000)
-                            if (candleDelay > 99) { //&& this.lastBuyOrderId > 0) {
+                            if (candleDelay > 180 && this.currentCandleMts > 0) {
                                 this.candleSubscription.unsubscribe()
                                 this.logger.log(data, "reconnecting to candle socket")
                                 this.candleStream(key)
@@ -584,7 +584,7 @@ export class TradeService {
                     } else {
                         return
                     }
-                    
+
                     // this is a questionable hack to sort out missing candles
                     if (!currentCandle) {
                         this.logger.log(key, 'candle socket key')
