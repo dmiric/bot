@@ -47,6 +47,7 @@ export class TradeService {
 
     private lastBuyOrderId = 0;
     private lastCandleCount = 0;
+    private currentCandleMts = 0;
 
     constructor(
         private parseCandlesService: ParseCandlesService,
@@ -231,13 +232,20 @@ export class TradeService {
                     if (data) {
                         // hack to reconnect if position update is late 1 minute
                         if (this.lastPositionUpdateTime > 0) {
-                            const secDelay = Math.floor((Date.now() - this.lastPositionUpdateTime) / 1000)
-                            if (secDelay > 60) { //&& this.lastBuyOrderId > 0) {
+                            const posDelay = Math.floor((Date.now() - this.lastPositionUpdateTime) / 1000)
+                            if (posDelay > 60) { //&& this.lastBuyOrderId > 0) {
                                 this.orderSocketService.setReadyState(false)
                                 // unsub from order stream
                                 this.orderSubscription.unsubscribe()
                                 this.logger.log(data, "reconnecting to order socket")
                                 this.trade(key, true)
+                            }
+
+                            const candleDelay = Math.floor((Date.now() - this.currentCandleMts) / 1000)
+                            if (candleDelay > 99) { //&& this.lastBuyOrderId > 0) {
+                                this.candleSubscription.unsubscribe()
+                                this.logger.log(data, "reconnecting to candle socket")
+                                this.candleStream(key)
                             }
                         }
                     }
@@ -570,14 +578,13 @@ export class TradeService {
                     // if we don't have one more candle at this point no need to continue
                     if (candleSet && candleSet.length > this.lastCandleCount) {
                         this.lastCandleCount = candleSet.length
+                        this.currentCandleMts = currentCandle.mts
                         this.logger.log(this.lastCandleCount + ":" + candleSet.length, 'candle count')
                         this.logger.log(currentCandle, 'current candle')
                     } else {
                         return
                     }
-
-
-
+                    
                     // this is a questionable hack to sort out missing candles
                     if (!currentCandle) {
                         this.logger.log(key, 'candle socket key')
