@@ -243,7 +243,9 @@ export class TradeService {
 
                             const candleDelay = Math.floor((Date.now() - this.currentCandleMts) / 1000)
                             if (candleDelay > 180 && this.currentCandleMts > 0) {
-                                this.candleSubscription.unsubscribe()
+                                if (this.candleSubscription !== undefined) {
+                                    this.candleSubscription.unsubscribe()
+                                }
                                 this.logger.log(data, "reconnecting to candle socket")
                                 this.candleStream(key)
                             }
