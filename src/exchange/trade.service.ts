@@ -640,6 +640,22 @@ export class TradeService {
                             this.logger.log(key, 'candle socket key: 461')
                             let buyPrice = 0
                             if (order.meta.id != 101) {
+                                
+                                // this should be reworked and merged with code around line 605
+                                const lastBuyOrder = this.orderCycleService.getLastBuyOrder(key)
+                                if (lastBuyOrder) {
+                                    this.logger.log(lastBuyOrder, 'lastBuyOrder candles > 200')
+                                    if (lastBuyOrder.meta.tradeExecuted) {
+                                        const tradeTimestamp = lastBuyOrder.meta.tradeTimestamp
+                                        this.logger.log([tradeTimestamp, candleSet[candleSet.length - 1].mts], 'tradeTimeStamp : lastCandle mts')
+                                        if (tradeTimestamp > candleSet[candleSet.length - 1].mts) {
+                                            candleSet = this.behaviorService.getCandleStack(candleSet, tradeTimestamp)
+                                            this.lastCandleCount = candleSet.length
+                                            this.logger.log(candleSet, 'trim candle set')
+                                        }
+                                    }
+                                }
+
                                 buyPrice = this.behaviorService.getBuyOrderPrice(candleSet)
                                 order['price'] = buyPrice
                             }
