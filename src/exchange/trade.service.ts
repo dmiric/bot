@@ -370,6 +370,7 @@ export class TradeService {
 
                             this.logger.log(data, "te: trade executed")
                             this.logger.log(key, "te: trade executed")
+                            // some sort of await would be good here
                             this.orderCycleService.updateBuyOrder(key, teOrder[11], { price: teOrder[5], exAmount: exAmountUpdate, tradeExecuted: tradeExecuted, tradeTimeStamp: teOrder[5], ex_id: teOrder[0] });
                         }
                     }
@@ -386,7 +387,7 @@ export class TradeService {
                         // executed trade has to be positive
                         // we are updating buy orders here
                         // :TUDU dodati provjeru za manualne ordere
-                        this.orderCycleService.updateBuyOrder(key, teOrder[11], { fee: teOrder[9] });
+                        this.orderCycleService.updateBuyOrder(key, teOrder[11], { fee: teOrder[9], tradeExecuted: true });
 
                     }
 
@@ -640,7 +641,7 @@ export class TradeService {
                             this.logger.log(key, 'candle socket key: 461')
                             let buyPrice = 0
                             if (order.meta.id != 101) {
-                                
+
                                 // this should be reworked and merged with code around line 605
                                 const lastBuyOrder = this.orderCycleService.getLastBuyOrder(key)
                                 if (lastBuyOrder) {
