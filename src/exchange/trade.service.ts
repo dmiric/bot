@@ -495,7 +495,7 @@ export class TradeService {
                                 // fix problem of orders being filled socket is disconnected
                                 if (order[31] !== null && order[31].hasOwnProperty('key') && lastBuyOrder) {                                    
                                     if (lastBuyOrder && lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
-                                        if (order[31]['meta']['id'] === lastBuyOrder.meta.id) {
+                                        if (order[31]['id'] === lastBuyOrder.meta.id) {
                                             lastBuyOrderStillActive = true
                                         }
                                     }
