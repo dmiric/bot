@@ -462,46 +462,50 @@ export class TradeService {
 
                     // os: order snapshot
                     if (data[1] == 'os') {
+                        const lastBuyOrder = this.orderCycleService.getLastBuyOrder(key)
+                        let lastBuyOrderStillActive = false
+
                         for (const order of data[2]) {
                             if (order[8] == 'TRAILING STOP' && order[3] == key.symbol) {
                                 this.setTrailingOrderSent(true)
                                 this.trailingStopOrderId = order[0]
                             }
 
-                            // cancel orphan order
-                            if (order[8] == 'LIMIT' && order[3] == key.symbol && order[31] !== null &&
-                                order[31].hasOwnProperty('key') && order[31]['key']['id'] != key.id) {
-                                this.orderSocketService.cancelOrder(order[0])
-                                this.logger.log(order, "os: orphan order canceled")
-                            }
-
-                            if (order[8] == 'LIMIT' && order[3] == key.symbol && order[31] === null) {
-                                const fOrder = this.orderCycleService.addCustomBuyOrder(key, order)
-                                this.orderSocketService.cancelOrder(order[0])
-                                this.orderSocketService.makeOrder(fOrder)
-                            }
-
-                            // add already established custom orders
-                            if (order[8] == 'LIMIT' && order[3] == key.symbol && order[31] !== null &&
-                                order[31].hasOwnProperty('key') && order[31]['key']['id'] === key.id && order[31]['type'] == 'custom') {
-                                this.orderCycleService.addCustomBuyOrder(key, order)
-                                this.orderCycleService.updateBuyOrder(key, order[2], { sentToEx: true });
-                            }
-
-                            // fix problem of orders being filled socket is disconnected
-                            const lastBuyOrder = this.orderCycleService.getLastBuyOrder(key)
-                            if (lastBuyOrder && lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
-                                let lastBuyOrderStillActive = false
-                                if (order[8] == 'LIMIT' && order[3] == key.symbol && order[31] !== null &&
-                                    order[31].hasOwnProperty('key') && order[31]['meta']['id'] === lastBuyOrder.meta.id) {
-                                    lastBuyOrderStillActive = true
+                            // limit orders
+                            if (order[8] == 'LIMIT' && order[3] == key.symbol) {
+                                // cancel orphan order
+                                if (order[31] !== null && order[31].hasOwnProperty('key') && order[31]['key']['id'] != key.id) {
+                                    this.orderSocketService.cancelOrder(order[0])
+                                    this.logger.log(order, "os: orphan order canceled")
                                 }
 
-                                if(lastBuyOrderStillActive === false) {
-                                    // for now we will only mark order as filled
-                                    this.orderCycleService.updateBuyOrder(key, lastBuyOrder.cid, { tradeExecuted: true, tradeTimeStamp: Date.now() });
+                                // custom Limit order that showed up while socket was disconected
+                                if (order[31] === null) {
+                                    const fOrder = this.orderCycleService.addCustomBuyOrder(key, order)
+                                    this.orderSocketService.cancelOrder(order[0])
+                                    this.orderSocketService.makeOrder(fOrder)
+                                }
+
+                                // add already established custom orders
+                                if (order[31] !== null && order[31].hasOwnProperty('key') && order[31]['key']['id'] === key.id && order[31]['type'] == 'custom') {
+                                    this.orderCycleService.addCustomBuyOrder(key, order)
+                                    this.orderCycleService.updateBuyOrder(key, order[2], { sentToEx: true });
+                                }
+
+                                // fix problem of orders being filled socket is disconnected
+                                if (order[31] !== null && order[31].hasOwnProperty('key')) {                                    
+                                    if (lastBuyOrder && lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
+                                        if (order[31]['meta']['id'] === lastBuyOrder.meta.id) {
+                                            lastBuyOrderStillActive = true
+                                        }
+                                    }
                                 }
                             }
+                        }
+
+                        if (lastBuyOrderStillActive === false) {
+                            // for now we will only mark order as filled
+                            this.orderCycleService.updateBuyOrder(key, lastBuyOrder.cid, { tradeExecuted: true, tradeTimeStamp: Date.now() });
                         }
                     }
 
