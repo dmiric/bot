@@ -11,6 +11,7 @@ export class OrdersService {
     private orders: Order[];
 
     constructor() {
+        /*
         this.availableForPosition[101] = 1.000000;
         this.availableForPosition[102] = 1.147962;
         this.availableForPosition[103] = 1.317818;
@@ -31,6 +32,29 @@ export class OrdersService {
         this.availableForPosition[118] = 10.441692;
         this.availableForPosition[119] = 11.986670;
         this.availableForPosition[120] = 13.760253;
+        */
+
+        
+        this.availableForPosition[101] = 10;
+        this.availableForPosition[102] = 9;
+        this.availableForPosition[103] = 8;
+        this.availableForPosition[104] = 7;
+        this.availableForPosition[105] = 6;
+        this.availableForPosition[106] = 4;
+        this.availableForPosition[107] = 3;
+        this.availableForPosition[108] = 2;
+        this.availableForPosition[109] = 1;
+        this.availableForPosition[110] = 1;
+        this.availableForPosition[111] = 1;
+        this.availableForPosition[112] = 1;
+        this.availableForPosition[113] = 1;
+        this.availableForPosition[114] = 1;
+        this.availableForPosition[115] = 1;
+        this.availableForPosition[116] = 6;
+        this.availableForPosition[117] = 7;
+        this.availableForPosition[118] = 8;
+        this.availableForPosition[119] = 9;
+        this.availableForPosition[120] = 14;
     }
 
     getOrders(): Order[] {
