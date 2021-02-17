@@ -503,7 +503,7 @@ export class TradeService {
                             }
                         }
 
-                        if (lastBuyOrderStillActive === false) {
+                        if (lastBuyOrderStillActive === false && lastBuyOrder && lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
                             // for now we will only mark order as filled
                             this.orderCycleService.updateBuyOrder(key, lastBuyOrder.cid, { tradeExecuted: true, tradeTimeStamp: Date.now() });
                         }
