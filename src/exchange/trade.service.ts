@@ -292,6 +292,10 @@ export class TradeService {
                             return
                         }
 
+                        if(order.meta.id == 101) {
+                            return
+                        }
+
                         if (order.meta.sentToEx === false) {
                             this.orderSocketService.makeOrder(order)
                         }
@@ -594,6 +598,13 @@ export class TradeService {
 
                     const currentCandle: Candle = candleSet[candleSet.length - 1]
 
+                    if(!this.orderCycleService.getLastBuyOrder(key)) {
+                        const order = { ...this.ordersService.getOrder(key, 101, currentCandle.close) }
+                        this.orderCycleService.addBuyOrder(key, order, 0)
+                        this.lastBuyOrderId = 101
+                        this.orderSocketService.makeOrder(order)
+                    }
+
                     // if we don't have one more candle at this point no need to continue
                     if (candleSet && candleSet.length > this.lastCandleCount) {
                         this.lastCandleCount = candleSet.length
@@ -657,7 +668,6 @@ export class TradeService {
                             this.logger.log(key, 'candle socket key: 461')
                             let buyPrice = 0
                             if (order.meta.id != 101) {
-
                                 // this should be reworked and merged with code around line 605
                                 const lastBuyOrder = this.orderCycleService.getLastBuyOrder(key)
                                 if (lastBuyOrder) {
