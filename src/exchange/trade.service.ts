@@ -14,6 +14,7 @@ import { Order } from '../interfaces/order.model'
 import { normalClosureMessage } from 'rxjs-websockets';
 import { OrderSocketService } from '../orders/ordersocket.service'
 import { RestService } from './rest.service';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class TradeService {
@@ -192,6 +193,40 @@ export class TradeService {
         this.trailingOrderSent = trailing
     }
 
+    @Cron('59 * * * * *')
+    handleCron(): void {
+        if (!this.lastLongKey) {
+            return
+        }
+
+        if (this.lastPositionUpdateTime == 0) {
+            return
+        }
+
+        const posDelay = Math.floor((Date.now() - this.lastPositionUpdateTime) / 1000)
+        if (posDelay > 60) { //&& this.lastBuyOrderId > 0) {
+            this.orderSocketService.setReadyState(false)
+            // unsub from order stream
+            this.orderSubscription.unsubscribe()
+            this.logger.log("", "reconnecting to order socket")
+            this.trade(this.lastLongKey, true)
+        }
+
+        if (this.currentCandleMts == 0) {
+            return
+        }
+
+        const candleDelay = Math.floor((Date.now() - this.currentCandleMts) / 1000)
+        if (candleDelay > 180) {
+            if (this.candleSubscription !== undefined) {
+                this.candleSubscription.unsubscribe()
+            }
+            this.logger.log("", "reconnecting to candle socket")
+            this.candleStream(this.lastLongKey)
+        }
+
+    }
+
     public trade(key: Key, reconnect = false): void {
         this.setLastSignal(key)
         this.lastPositionUpdateTime = 0
@@ -215,11 +250,11 @@ export class TradeService {
                 if (data[1] == 'pu') {
                     // we don't want all positions in log
                     if (data[2][0] == key.symbol) {
-                        this.logger.log(data, "order socket")
+                        this.logger.log(data, "pu")
                     }
                 } else {
-                    if (data[1] !== 'bu') {
-                        this.logger.log(data, "order socket")
+                    if (data[1] !== 'bu' && data[1] !== 'wu') {
+                        this.logger.log(data, "not pu")
                     }
                 }
 
@@ -229,29 +264,6 @@ export class TradeService {
                     // and we send a message to start the stream
                     this.orderSocketService.auth()
                 } else {
-                    if (data) {
-                        // hack to reconnect if position update is late 1 minute
-                        if (this.lastPositionUpdateTime > 0) {
-                            const posDelay = Math.floor((Date.now() - this.lastPositionUpdateTime) / 1000)
-                            if (posDelay > 60) { //&& this.lastBuyOrderId > 0) {
-                                this.orderSocketService.setReadyState(false)
-                                // unsub from order stream
-                                this.orderSubscription.unsubscribe()
-                                this.logger.log(data, "reconnecting to order socket")
-                                this.trade(key, true)
-                            }
-
-                            const candleDelay = Math.floor((Date.now() - this.currentCandleMts) / 1000)
-                            if (candleDelay > 180 && this.currentCandleMts > 0) {
-                                if (this.candleSubscription !== undefined) {
-                                    this.candleSubscription.unsubscribe()
-                                }
-                                this.logger.log(data, "reconnecting to candle socket")
-                                this.candleStream(key)
-                            }
-                        }
-                    }
-
                     if (data.event) {
                         return;
                     }
@@ -493,7 +505,7 @@ export class TradeService {
                                 }
 
                                 // fix problem of orders being filled socket is disconnected
-                                if (order[31] !== null && order[31].hasOwnProperty('key') && lastBuyOrder) {                                    
+                                if (order[31] !== null && order[31].hasOwnProperty('key') && lastBuyOrder) {
                                     if (lastBuyOrder && lastBuyOrder.meta.sentToEx === true && lastBuyOrder.meta.tradeExecuted === false) {
                                         if (order[31]['id'] === lastBuyOrder.meta.id) {
                                             lastBuyOrderStillActive = true

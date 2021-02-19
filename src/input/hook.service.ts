@@ -3,11 +3,12 @@ import { TradeService } from '../exchange/trade.service'
 import { HookReqDto } from './dto/HookReqDto'
 import { Key } from '../interfaces/key.model'
 import { TrailingStop } from '../interfaces/trailingstop.model'
+import { ArgvService } from './argv.service'
 
 @Injectable()
 export class HookService {
 
-    constructor(private tradeService: TradeService) { }
+    constructor(private tradeService: TradeService, private argvService: ArgvService) { }
 
     start(req: HookReqDto): void {
         let key: Key
@@ -98,6 +99,13 @@ export class HookService {
             console.log("Missing a symbol param.")
             return false
         }
+
+        /*
+        if (req.symbol != this.argvService.getSymbol()) {
+            console.log("Wrong symbol.")
+            return false
+        }
+        */
 
         if (req.action === 'close') {
             if (!req.hasOwnProperty('closePercent')) {

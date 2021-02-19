@@ -3,6 +3,7 @@ import { RestService } from './rest.service'
 import { TradeService } from './trade.service'
 import { Key } from '../interfaces/key.model'
 import { Order } from '../interfaces/order.model'
+import { ArgvService } from '../input/argv.service'
 
 @Injectable()
 export class ReconnectService {
@@ -12,10 +13,13 @@ export class ReconnectService {
     constructor(
         private restService: RestService,
         private tradeService: TradeService,
+        private argvService: ArgvService,
         @Inject(Logger) private readonly logger: LoggerService) {
     }
 
     async reConnect(): Promise<any> {
+        const configSymbol = this.argvService.getSymbol()
+
         // prevent signals while we are setting up the state
         this.tradeService.setStarting(true)
 
@@ -23,7 +27,7 @@ export class ReconnectService {
         this.logger.log(positions)
 
         for (const pos of positions) {
-            if (pos[1] === 'ACTIVE' && (pos[0] == 'tBTCUSD' || pos[0] == 'tTESTBTC:TESTUSD')) {
+            if (pos[1] === 'ACTIVE' && (pos[0] == configSymbol || pos[0] == 'tTESTBTC:TESTUSD')) {
                 this.logger.log(pos)
                 // Last buy order from history
                 const lastOrderId = pos[19]['order_id']

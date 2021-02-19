@@ -22,6 +22,7 @@ import { Module, Logger } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClosedTradesController } from './input/closedtrades.controller';
+import { ScheduleModule } from '@nestjs/schedule';
 
 
 @Module({
@@ -31,7 +32,8 @@ import { ClosedTradesController } from './input/closedtrades.controller';
     BehaviourModule,
     OrdersModule,
     InputModule,
-    CandlesModule
+    CandlesModule,
+    ScheduleModule.forRoot()
   ],
   controllers: [
     StopController,

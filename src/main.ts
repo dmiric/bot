@@ -6,9 +6,8 @@ import { utilities as nestWinstonModuleUtilities, WinstonModule } from 'nest-win
 import * as winston from 'winston';
 import * as stayAwake from 'stay-awake'
 
-import { ExchangeModule } from './exchange/exchange.module';
-import { ReconnectService } from './exchange/reconnect.service'
-
+import { InputModule } from './input/input.module'
+import { ArgvService } from './input/argv.service'
 
 async function bootstrap() {
   // prevent auto sleep
@@ -35,6 +34,9 @@ async function bootstrap() {
     })
   });
 
-  await app.listen(8080);
+  const argvService = app.select(InputModule).get(ArgvService, { strict: true })
+  const port = argvService.getPort()
+  
+  await app.listen(port);
 }
 bootstrap();
