@@ -37,6 +37,6 @@ async function bootstrap() {
   const argvService = app.select(InputModule).get(ArgvService, { strict: true })
   const port = argvService.getPort()
   
-  await app.listen(8080);
+  await app.listen(port);
 }
 bootstrap();
