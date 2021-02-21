@@ -81,6 +81,9 @@ export class TradeService {
 
         const status = {}
         status['tradeStatus'] = this.tradeStatus
+        status['lastClosePrice'] = this.currentPrice
+        status['lastCandleTime'] = new Date(this.currentCandleMts * 1000);
+        status['symbol'] = this.lastLongKey.symbol
         status['activePosValue'] = this.activePosition[6]
         status['activePosPercent'] = this.activePosition[7]
         status['activePosMaxPercent'] = this.activePositionMaxPerc
@@ -603,6 +606,8 @@ export class TradeService {
                         this.orderCycleService.addBuyOrder(key, order, 0)
                         this.lastBuyOrderId = 101
                         this.orderSocketService.makeOrder(order)
+                        candleSet = []
+                        this.lastCandleCount = 0
                     }
 
                     // if we don't have one more candle at this point no need to continue
