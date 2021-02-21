@@ -82,7 +82,7 @@ export class TradeService {
         const status = {}
         status['tradeStatus'] = this.tradeStatus
         status['lastClosePrice'] = this.currentPrice
-        status['lastCandleTime'] = new Date(this.currentCandleMts * 1000);
+        status['lastCandleTime'] = this.currentCandleMts > 0 ? new Date(this.currentCandleMts) : null
         status['symbol'] = this.lastLongKey.symbol
         status['activePosValue'] = this.activePosition[6]
         status['activePosPercent'] = this.activePosition[7]
