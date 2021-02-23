@@ -31,7 +31,11 @@ export class ReconnectService {
                 this.logger.log(pos)
                 // Last buy order from history
                 const lastOrderId = pos[19]['order_id']
-                const lastHistBuyOrders = await this.restService.fetchOrders(pos[0], {id: [lastOrderId]}, true)
+                let lastHistBuyOrders = await this.restService.fetchOrders(pos[0], {id: [lastOrderId]}, true)
+
+                if(pos[19]['reason'] == 'FUNDING_ACCR') {
+                    lastHistBuyOrders = await this.restService.fetchOrders(pos[0], {limit: 1}, true)
+                }
 
                 // take datetime when position was made and look back only to that datetime
                 // find last order made by bot - check if order.meta has id
