@@ -221,6 +221,7 @@ export class TradeService {
 
         const candleDelay = Math.floor((Date.now() - this.currentCandleMts) / 1000)
         if (candleDelay > 180) {
+            console.log(Date.now() + ' ' + this.currentCandleMts)
             if (this.candleSubscription !== undefined) {
                 this.candleSubscription.unsubscribe()
             }
