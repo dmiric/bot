@@ -33,7 +33,7 @@ export class ReconnectService {
                 const lastOrderId = pos[19]['order_id']
                 let lastHistBuyOrders = await this.restService.fetchOrders(pos[0], {id: [lastOrderId]}, true)
 
-                if(pos[19]['reason'] == 'FUNDING_ACCR') {
+                if(pos[19]['reason'] == 'FUNDING_ACCR' || pos[19]['reason'] == 'FUNDING_SETTLE') {
                     lastHistBuyOrders = await this.restService.fetchOrders(pos[0], {limit: 1}, true)
                 }
 
