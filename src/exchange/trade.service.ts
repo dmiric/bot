@@ -568,6 +568,7 @@ export class TradeService {
         }
         this.candleSocketService.createSocket()
         this.logger.log(key, 'candle socket started with this key')
+        this.lastCandleCount = 0
 
         this.candleSubscription = this.candleSocketService.messages$.subscribe(
             (message: string) => {
