@@ -131,6 +131,10 @@ export class OrderSocketService {
             meta: { ...order.meta }
         }
 
+        if(order.amount < 0 ) {
+            apiOrder['flags'] = 1024
+        }
+
         // orders that don't have price are switched to MARKET order
         if (order.hasOwnProperty('price')) {
             apiOrder['price'] = order.price.toFixed(2)
